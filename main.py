@@ -416,19 +416,24 @@ def process_single_crn(crn_number, username, password, result_queue):
                         try:
                             time.sleep(2)  # Add extra wait time for dropdown to be fully loaded
                             
-                            # Wait for the dropdown container and dropdown
-                            dropdown_container = WebDriverWait(driver, 15).until(
-                                EC.presence_of_element_located((By.ID, 'id_73777221998337'))
+                            # Wait for the dropdown container and dropdown with the correct ID
+                            loan_purpose_dropdown = WebDriverWait(driver, 15).until(
+                                EC.presence_of_element_located((By.CSS_SELECTOR, '#missing_2409 select#ddl_undefined'))
                             )
                             
-                            loan_purpose_dropdown = dropdown_container.find_element(
-                                By.CSS_SELECTOR, 'select[id="ddl_undefined"]'
+                            # Ensure element is interactable
+                            WebDriverWait(driver, 10).until(
+                                EC.element_to_be_clickable((By.CSS_SELECTOR, '#missing_2409 select#ddl_undefined'))
                             )
+                            
+                            # Scroll the dropdown into view
+                            driver.execute_script("arguments[0].scrollIntoView(true);", loan_purpose_dropdown)
+                            time.sleep(1)
                             
                             # Select "Personal Expense" from dropdown
                             select = Select(loan_purpose_dropdown)
                             select.select_by_value("PE")
-                            time.sleep(1)
+                            time.sleep(1)  # Wait for selection to take effect
                         except Exception as e:
                             print(f"Error with dropdown: {str(e)}")
                         
@@ -480,19 +485,19 @@ def process_single_crn(crn_number, username, password, result_queue):
 
 
                                                 submit_button = WebDriverWait(driver, 10).until(
-                                                    EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[id="c_75855828162"]'))
+                                                    EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[id="missing_26865"][data-testid="button1"]'))
                                                 )
 
                                                 # Scroll the button into view
                                                 driver.execute_script("arguments[0].scrollIntoView(true);", submit_button)
                                                 time.sleep(1)  # Wait for the scroll to complete
-                                                
+
                                                 # Try to click using JavaScript for better reliability
                                                 try:
                                                     submit_button.click()
                                                 except:
                                                     driver.execute_script("arguments[0].click();", submit_button)
-                                                
+
                                                 print("Successfully clicked Submit button")
                                                 time.sleep(10)
                                                 
@@ -587,8 +592,8 @@ def process_single_crn(crn_number, username, password, result_queue):
 #     driver.quit()
 
 def run_parallel_tests():
-    crn_numbers = ["291241281", "291294622", "291353050", "291442553"]  # Add more CRN numbers as needed
-    max_workers = min(len(crn_numbers), 6)  # Limit concurrent threads
+    crn_numbers = ["707130140", "720694715", "683065677", "683142443"]  # Add more CRN numbers as needed
+    max_workers = min(len(crn_numbers), 4)  # Limit concurrent threads
     result_queue = queue.Queue()
     
     logging.basicConfig(level=logging.INFO)
